@@ -1,0 +1,1059 @@
+openapi: 3.0.3
+info:
+  title: Veridrop
+  version: 0.1.0
+  description: 'Proofed Curation Market control plane: stake drops, verify delivery proofs, allocate rewards.'
+  x-product-slug: ai-decentralized-veridrop
+  x-source: ai-in-decentralized+ai/openminedOcean Protocol Technical Whitepaper/
+servers:
+- url: https://api.example.com
+tags:
+- name: Services
+  description: AI data and compute services
+- name: DropPositions
+  description: Curation stake positions
+- name: ServiceAgreements
+  description: Consumer-provider agreements
+- name: DeliveryProofs
+  description: Cryptographic delivery attestations
+- name: RewardEpochs
+  description: Emission epochs and allocations
+- name: ArbitrationCases
+  description: IP and delivery disputes
+paths:
+  /v1/services:
+    get:
+      operationId: listServices
+      tags:
+      - Services
+      summary: List Service
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEnvelopeService'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: registerService
+      tags:
+      - Services
+      summary: Create Service
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeService'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/services/{serviceId}:
+    parameters:
+    - $ref: '#/components/parameters/ServiceId'
+    get:
+      operationId: getService
+      tags:
+      - Services
+      summary: Get Service
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeService'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/drop-positions:
+    get:
+      operationId: listDropPositions
+      tags:
+      - DropPositions
+      summary: List DropPosition
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEnvelopeDropPosition'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: openDropPosition
+      tags:
+      - DropPositions
+      summary: Create DropPosition
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DropPositionCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeDropPosition'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/drop-positions/{positionId}:
+    parameters:
+    - $ref: '#/components/parameters/PositionId'
+    get:
+      operationId: getDropPosition
+      tags:
+      - DropPositions
+      summary: Get DropPosition
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeDropPosition'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/drop-positions/{positionId}/unstake:
+    parameters:
+    - $ref: '#/components/parameters/PositionId'
+    post:
+      operationId: unstakeDropPosition
+      tags:
+      - DropPositions
+      summary: Begin un-stake
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeDropPosition'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /v1/service-agreements:
+    get:
+      operationId: listServiceAgreements
+      tags:
+      - ServiceAgreements
+      summary: List ServiceAgreement
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEnvelopeServiceAgreement'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createServiceAgreement
+      tags:
+      - ServiceAgreements
+      summary: Create ServiceAgreement
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceAgreementCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeServiceAgreement'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/service-agreements/{agreementId}:
+    parameters:
+    - $ref: '#/components/parameters/AgreementId'
+    get:
+      operationId: getServiceAgreement
+      tags:
+      - ServiceAgreements
+      summary: Get ServiceAgreement
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeServiceAgreement'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/delivery-proofs:
+    get:
+      operationId: listDeliveryProofs
+      tags:
+      - DeliveryProofs
+      summary: List DeliveryProof
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEnvelopeDeliveryProof'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: submitDeliveryProof
+      tags:
+      - DeliveryProofs
+      summary: Create DeliveryProof
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryProofCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeDeliveryProof'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/delivery-proofs/{proofId}:
+    parameters:
+    - $ref: '#/components/parameters/ProofId'
+    get:
+      operationId: getDeliveryProof
+      tags:
+      - DeliveryProofs
+      summary: Get DeliveryProof
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeDeliveryProof'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/reward-epochs:
+    get:
+      operationId: listRewardEpochs
+      tags:
+      - RewardEpochs
+      summary: List RewardEpoch
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEnvelopeRewardEpoch'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: openRewardEpoch
+      tags:
+      - RewardEpochs
+      summary: Create RewardEpoch
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RewardEpochCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeRewardEpoch'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/reward-epochs/{epochId}:
+    parameters:
+    - $ref: '#/components/parameters/EpochId'
+    get:
+      operationId: getRewardEpoch
+      tags:
+      - RewardEpochs
+      summary: Get RewardEpoch
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeRewardEpoch'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/reward-epochs/{epochId}/pause:
+    parameters:
+    - $ref: '#/components/parameters/EpochId'
+    post:
+      operationId: pauseRewardEpoch
+      tags:
+      - RewardEpochs
+      summary: Pause emission for exploit response
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeRewardEpoch'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /v1/arbitration-cases:
+    get:
+      operationId: listArbitrationCases
+      tags:
+      - ArbitrationCases
+      summary: List ArbitrationCase
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEnvelopeArbitrationCase'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: openArbitrationCase
+      tags:
+      - ArbitrationCases
+      summary: Create ArbitrationCase
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArbitrationCaseCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeArbitrationCase'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/arbitration-cases/{caseId}:
+    parameters:
+    - $ref: '#/components/parameters/CaseId'
+    get:
+      operationId: getArbitrationCase
+      tags:
+      - ArbitrationCases
+      summary: Get ArbitrationCase
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataEnvelopeArbitrationCase'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Cursor:
+      name: cursor
+      in: query
+      schema:
+        type: string
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 25
+    ServiceId:
+      name: serviceId
+      in: path
+      required: true
+      schema:
+        type: string
+    PositionId:
+      name: positionId
+      in: path
+      required: true
+      schema:
+        type: string
+    AgreementId:
+      name: agreementId
+      in: path
+      required: true
+      schema:
+        type: string
+    ProofId:
+      name: proofId
+      in: path
+      required: true
+      schema:
+        type: string
+    EpochId:
+      name: epochId
+      in: path
+      required: true
+      schema:
+        type: string
+    CaseId:
+      name: caseId
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    BadRequest:
+      description: Bad request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: Not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: Conflict
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  schemas:
+    ResponseMeta:
+      type: object
+      required:
+      - requestId
+      - timestamp
+      properties:
+        requestId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    Problem:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+    Service:
+      type: object
+      required:
+      - id
+      - providerParticipantId
+      - serviceType
+      - proofTypeRequired
+      - status
+      properties:
+        id:
+          type: string
+        providerParticipantId:
+          type: string
+        serviceType:
+          type: string
+          enum:
+          - dataAvailability
+          - privacyCompute
+          - persistence
+        proofTypeRequired:
+          type: string
+          enum:
+          - availability
+          - zkCompute
+          - replication
+        status:
+          type: string
+          enum:
+          - active
+          - paused
+          - retired
+        title:
+          type: string
+    ServiceCreate:
+      type: object
+      required:
+      - providerParticipantId
+      - serviceType
+      - proofTypeRequired
+      - status
+      properties:
+        providerParticipantId:
+          type: string
+        serviceType:
+          type: string
+          enum:
+          - dataAvailability
+          - privacyCompute
+          - persistence
+        proofTypeRequired:
+          type: string
+          enum:
+          - availability
+          - zkCompute
+          - replication
+        status:
+          type: string
+          enum:
+          - active
+          - paused
+          - retired
+        title:
+          type: string
+    DataEnvelopeService:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/Service'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    ListEnvelopeService:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Service'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    DropPosition:
+      type: object
+      required:
+      - id
+      - serviceId
+      - curatorParticipantId
+      - dropsAmount
+      - status
+      properties:
+        id:
+          type: string
+        serviceId:
+          type: string
+        curatorParticipantId:
+          type: string
+        dropsAmount:
+          type: number
+        stakedOcean:
+          type: number
+        status:
+          type: string
+          enum:
+          - open
+          - unstaking
+          - closed
+    DropPositionCreate:
+      type: object
+      required:
+      - serviceId
+      - curatorParticipantId
+      - dropsAmount
+      - status
+      properties:
+        serviceId:
+          type: string
+        curatorParticipantId:
+          type: string
+        dropsAmount:
+          type: number
+        stakedOcean:
+          type: number
+        status:
+          type: string
+          enum:
+          - open
+          - unstaking
+          - closed
+    DataEnvelopeDropPosition:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/DropPosition'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    ListEnvelopeDropPosition:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/DropPosition'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    ServiceAgreement:
+      type: object
+      required:
+      - id
+      - serviceId
+      - consumerParticipantId
+      - status
+      properties:
+        id:
+          type: string
+        serviceId:
+          type: string
+        consumerParticipantId:
+          type: string
+        status:
+          type: string
+          enum:
+          - proposed
+          - active
+          - fulfilled
+          - disputed
+          - cancelled
+        accessPolicyRef:
+          type: string
+    ServiceAgreementCreate:
+      type: object
+      required:
+      - serviceId
+      - consumerParticipantId
+      - status
+      properties:
+        serviceId:
+          type: string
+        consumerParticipantId:
+          type: string
+        status:
+          type: string
+          enum:
+          - proposed
+          - active
+          - fulfilled
+          - disputed
+          - cancelled
+        accessPolicyRef:
+          type: string
+    DataEnvelopeServiceAgreement:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/ServiceAgreement'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    ListEnvelopeServiceAgreement:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/ServiceAgreement'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    DeliveryProof:
+      type: object
+      required:
+      - id
+      - serviceId
+      - agreementId
+      - proofType
+      - accepted
+      properties:
+        id:
+          type: string
+        serviceId:
+          type: string
+        agreementId:
+          type: string
+        proofType:
+          type: string
+          enum:
+          - availability
+          - zkCompute
+          - replication
+        accepted:
+          type: boolean
+        submittedAt:
+          type: string
+          format: date-time
+        rejectReason:
+          type: string
+    DeliveryProofCreate:
+      type: object
+      required:
+      - serviceId
+      - agreementId
+      - proofType
+      - proofPayload
+      properties:
+        serviceId:
+          type: string
+        agreementId:
+          type: string
+        proofType:
+          type: string
+          enum:
+          - availability
+          - zkCompute
+          - replication
+        proofPayload:
+          type: string
+    DataEnvelopeDeliveryProof:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/DeliveryProof'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    ListEnvelopeDeliveryProof:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeliveryProof'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    RewardEpoch:
+      type: object
+      required:
+      - id
+      - periodStart
+      - periodEnd
+      - status
+      - totalEmitted
+      properties:
+        id:
+          type: string
+        periodStart:
+          type: string
+          format: date-time
+        periodEnd:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+          - open
+          - finalizing
+          - paid
+          - paused
+        totalEmitted:
+          type: number
+    RewardEpochCreate:
+      type: object
+      required:
+      - periodStart
+      - periodEnd
+      properties:
+        periodStart:
+          type: string
+          format: date-time
+        periodEnd:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+          - open
+          - finalizing
+          - paid
+          - paused
+        totalEmitted:
+          type: number
+    DataEnvelopeRewardEpoch:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/RewardEpoch'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    ListEnvelopeRewardEpoch:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/RewardEpoch'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    ArbitrationCase:
+      type: object
+      required:
+      - id
+      - subjectType
+      - subjectId
+      - status
+      - claim
+      properties:
+        id:
+          type: string
+        subjectType:
+          type: string
+          enum:
+          - service
+          - agreement
+          - provenance
+        subjectId:
+          type: string
+        status:
+          type: string
+          enum:
+          - open
+          - resolved
+          - dismissed
+        claim:
+          type: string
+        resolution:
+          type: string
+    ArbitrationCaseCreate:
+      type: object
+      required:
+      - subjectType
+      - subjectId
+      - claim
+      properties:
+        subjectType:
+          type: string
+          enum:
+          - service
+          - agreement
+          - provenance
+        subjectId:
+          type: string
+        status:
+          type: string
+          enum:
+          - open
+          - resolved
+          - dismissed
+        claim:
+          type: string
+        resolution:
+          type: string
+    DataEnvelopeArbitrationCase:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/ArbitrationCase'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    ListEnvelopeArbitrationCase:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/ArbitrationCase'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
