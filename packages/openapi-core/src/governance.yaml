@@ -1,0 +1,144 @@
+openapi: 3.1.0
+info:
+  title: Governance API
+  version: 0.1.0
+  description: Versioned parameters with delay and network-wide emission circuit breakers.
+  license: { name: Proprietary, url: https://veridrop.local/license }
+  x-domain: gov
+servers:
+  - url: https://api.veridrop.local
+security:
+  - apiKey: []
+tags:
+  - name: Governance
+paths:
+  /v0/parameter-versions:
+    get:
+      operationId: listParameterVersions
+      tags: [Governance]
+      summary: List parameter versions
+      parameters:
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: status
+          in: query
+          schema: { $ref: ./governance.schemas.yaml#/components/schemas/ParameterStatus }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: ./governance.schemas.yaml#/components/schemas/ParameterVersionListResponse }
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: proposeParameterVersion
+      tags: [Governance]
+      summary: Propose a parameter change (starts governance delay)
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: ./governance.schemas.yaml#/components/schemas/ProposeParameterRequest }
+      responses:
+        '201':
+          description: Proposed
+          content:
+            application/json:
+              schema: { $ref: ./governance.schemas.yaml#/components/schemas/ParameterVersionResponse }
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: ParameterVersion
+      x-dynamodb:
+        entityType: "PARAMETER_VERSION"
+        pkPatternTemplate: "PARAMETER_VERSION#${parameterVersionId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: "entity"
+  /v0/parameter-versions/{parameterVersionId}:
+    parameters:
+      - name: parameterVersionId
+        in: path
+        required: true
+        schema: { $ref: ./governance.schemas.yaml#/components/schemas/ParameterVersionId }
+    get:
+      operationId: getParameterVersion
+      tags: [Governance]
+      summary: Get parameter version
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: ./governance.schemas.yaml#/components/schemas/ParameterVersionResponse }
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v0/parameter-versions/{parameterVersionId}/execute:
+    parameters:
+      - name: parameterVersionId
+        in: path
+        required: true
+        schema: { $ref: ./governance.schemas.yaml#/components/schemas/ParameterVersionId }
+    post:
+      operationId: executeParameterVersion
+      tags: [Governance]
+      summary: Execute parameter change after delay
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      responses:
+        '200':
+          description: Executed
+          content:
+            application/json:
+              schema: { $ref: ./governance.schemas.yaml#/components/schemas/ParameterVersionResponse }
+        '409':
+          $ref: ./common/responses.yaml#/components/responses/Conflict
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: none
+  /v0/governance/emission-pause:
+    get:
+      operationId: getEmissionPauseState
+      tags: [Governance]
+      summary: Get network emission pause state
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: ./governance.schemas.yaml#/components/schemas/EmissionPauseStateResponse }
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: setEmissionPauseState
+      tags: [Governance]
+      summary: Set network emission pause (circuit breaker)
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: ./governance.schemas.yaml#/components/schemas/EmissionPauseControlRequest }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: ./governance.schemas.yaml#/components/schemas/EmissionPauseStateResponse }
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: none
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey

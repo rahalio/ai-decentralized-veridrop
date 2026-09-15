@@ -1,0 +1,135 @@
+openapi: 3.1.0
+info:
+  title: Arbitration API
+  version: 0.1.0
+  description: Dispute desk — outcomes bind entitlement and reward eligibility.
+  license: { name: Proprietary, url: https://veridrop.local/license }
+  x-domain: arb
+servers:
+  - url: https://api.veridrop.local
+security:
+  - apiKey: []
+tags:
+  - name: ArbitrationCases
+paths:
+  /v0/arbitration-cases:
+    get:
+      operationId: listArbitrationCases
+      tags: [ArbitrationCases]
+      summary: List arbitration cases
+      parameters:
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: status
+          in: query
+          schema: { $ref: ./arbitration.schemas.yaml#/components/schemas/CaseStatus }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: ./arbitration.schemas.yaml#/components/schemas/ArbitrationCaseListResponse }
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: openArbitrationCase
+      tags: [ArbitrationCases]
+      summary: Open an arbitration case
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: ./arbitration.schemas.yaml#/components/schemas/ArbitrationCaseCreateRequest }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: ./arbitration.schemas.yaml#/components/schemas/ArbitrationCaseResponse }
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: ArbitrationCase
+      x-dynamodb:
+        entityType: "ARBITRATION_CASE"
+        pkPatternTemplate: "ARBITRATION_CASE#${caseId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: "entity"
+  /v0/arbitration-cases/{caseId}:
+    parameters:
+      - name: caseId
+        in: path
+        required: true
+        schema: { $ref: ./arbitration.schemas.yaml#/components/schemas/CaseId }
+    get:
+      operationId: getArbitrationCase
+      tags: [ArbitrationCases]
+      summary: Get arbitration case
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: ./arbitration.schemas.yaml#/components/schemas/ArbitrationCaseResponse }
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v0/arbitration-cases/{caseId}/decide:
+    parameters:
+      - name: caseId
+        in: path
+        required: true
+        schema: { $ref: ./arbitration.schemas.yaml#/components/schemas/CaseId }
+    post:
+      operationId: decideArbitrationCase
+      tags: [ArbitrationCases]
+      summary: Decide case and set binding effect
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: ./arbitration.schemas.yaml#/components/schemas/DecideCaseRequest }
+      responses:
+        '200':
+          description: Decided
+          content:
+            application/json:
+              schema: { $ref: ./arbitration.schemas.yaml#/components/schemas/ArbitrationCaseResponse }
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: none
+  /v0/arbitration-cases/{caseId}/bind-outcome:
+    parameters:
+      - name: caseId
+        in: path
+        required: true
+        schema: { $ref: ./arbitration.schemas.yaml#/components/schemas/CaseId }
+    post:
+      operationId: bindArbitrationOutcome
+      tags: [ArbitrationCases]
+      summary: Apply binding entitlement/reward update
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      responses:
+        '200':
+          description: Bound
+          content:
+            application/json:
+              schema: { $ref: ./arbitration.schemas.yaml#/components/schemas/ArbitrationCaseResponse }
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: none
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey

@@ -1,0 +1,574 @@
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
+
+const openDropPosition_Body = z
+  .object({
+    serviceId: z.string(),
+    curatorParticipantId: z.string(),
+    dropsAmount: z.number().gt(0),
+    stakedOcean: z.number().gte(0).optional(),
+  })
+  .passthrough();
+const Problem = z
+  .object({
+    type: z.string().url(),
+    title: z.string(),
+    status: z.number().int(),
+    detail: z.string(),
+    instance: z.string().url(),
+    code: z.string(),
+  })
+  .partial()
+  .passthrough();
+const PositionId = z.string();
+const DropPositionStatus = z.enum(['open', 'unstaking', 'closed']);
+const DropPosition = z
+  .object({
+    positionId: z.string().regex(/^pos_[0-9A-HJKMNP-TV-Z]{26}$/),
+    serviceId: z.string(),
+    curatorParticipantId: z.string(),
+    dropsAmount: z.number().gte(0),
+    stakedOcean: z.number().gte(0).optional(),
+    status: z.enum(['open', 'unstaking', 'closed']),
+    parameterVersionId: z.string(),
+    predictedPopularity: z.number().optional(),
+    actualProofCount: z.number().int().gte(0).optional(),
+    createdAt: z.string().datetime({ offset: true }),
+    updatedAt: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+const DropPositionListData = z
+  .object({
+    items: z.array(
+      z
+        .object({
+          positionId: z.string().regex(/^pos_[0-9A-HJKMNP-TV-Z]{26}$/),
+          serviceId: z.string(),
+          curatorParticipantId: z.string(),
+          dropsAmount: z.number().gte(0),
+          stakedOcean: z.number().gte(0).optional(),
+          status: z.enum(['open', 'unstaking', 'closed']),
+          parameterVersionId: z.string(),
+          predictedPopularity: z.number().optional(),
+          actualProofCount: z.number().int().gte(0).optional(),
+          createdAt: z.string().datetime({ offset: true }),
+          updatedAt: z.string().datetime({ offset: true }),
+        })
+        .passthrough()
+    ),
+    nextCursor: z.string().optional(),
+  })
+  .passthrough();
+const ResponseMeta = z
+  .object({
+    requestId: z.string().uuid(),
+    correlationId: z.string(),
+    generatedAt: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const DropPositionListResponse = z
+  .object({
+    data: z
+      .object({
+        items: z.array(
+          z
+            .object({
+              positionId: z.string().regex(/^pos_[0-9A-HJKMNP-TV-Z]{26}$/),
+              serviceId: z.string(),
+              curatorParticipantId: z.string(),
+              dropsAmount: z.number().gte(0),
+              stakedOcean: z.number().gte(0).optional(),
+              status: z.enum(['open', 'unstaking', 'closed']),
+              parameterVersionId: z.string(),
+              predictedPopularity: z.number().optional(),
+              actualProofCount: z.number().int().gte(0).optional(),
+              createdAt: z.string().datetime({ offset: true }),
+              updatedAt: z.string().datetime({ offset: true }),
+            })
+            .passthrough()
+        ),
+        nextCursor: z.string().optional(),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const DropPositionCreateRequest = z
+  .object({
+    serviceId: z.string(),
+    curatorParticipantId: z.string(),
+    dropsAmount: z.number().gt(0),
+    stakedOcean: z.number().gte(0).optional(),
+  })
+  .passthrough();
+const DropPositionResponse = z
+  .object({
+    data: z
+      .object({
+        positionId: z.string().regex(/^pos_[0-9A-HJKMNP-TV-Z]{26}$/),
+        serviceId: z.string(),
+        curatorParticipantId: z.string(),
+        dropsAmount: z.number().gte(0),
+        stakedOcean: z.number().gte(0).optional(),
+        status: z.enum(['open', 'unstaking', 'closed']),
+        parameterVersionId: z.string(),
+        predictedPopularity: z.number().optional(),
+        actualProofCount: z.number().int().gte(0).optional(),
+        createdAt: z.string().datetime({ offset: true }),
+        updatedAt: z.string().datetime({ offset: true }),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const UnstakeRequest = z
+  .object({ dropsAmount: z.number().gt(0) })
+  .partial()
+  .passthrough();
+const StakeEventId = z.string();
+const StakeEventType = z.enum(['open', 'unstake', 'slash']);
+const StakeEvent = z
+  .object({
+    stakeEventId: z.string().regex(/^stk_[0-9A-HJKMNP-TV-Z]{26}$/),
+    positionId: z.string().regex(/^pos_[0-9A-HJKMNP-TV-Z]{26}$/),
+    serviceId: z.string(),
+    eventType: z.enum(['open', 'unstake', 'slash']),
+    dropsAmount: z.number(),
+    reason: z.string().optional(),
+    createdAt: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+const StakeEventListData = z
+  .object({
+    items: z.array(
+      z
+        .object({
+          stakeEventId: z.string().regex(/^stk_[0-9A-HJKMNP-TV-Z]{26}$/),
+          positionId: z.string().regex(/^pos_[0-9A-HJKMNP-TV-Z]{26}$/),
+          serviceId: z.string(),
+          eventType: z.enum(['open', 'unstake', 'slash']),
+          dropsAmount: z.number(),
+          reason: z.string().optional(),
+          createdAt: z.string().datetime({ offset: true }),
+        })
+        .passthrough()
+    ),
+    nextCursor: z.string().optional(),
+  })
+  .passthrough();
+const StakeEventListResponse = z
+  .object({
+    data: z
+      .object({
+        items: z.array(
+          z
+            .object({
+              stakeEventId: z.string().regex(/^stk_[0-9A-HJKMNP-TV-Z]{26}$/),
+              positionId: z.string().regex(/^pos_[0-9A-HJKMNP-TV-Z]{26}$/),
+              serviceId: z.string(),
+              eventType: z.enum(['open', 'unstake', 'slash']),
+              dropsAmount: z.number(),
+              reason: z.string().optional(),
+              createdAt: z.string().datetime({ offset: true }),
+            })
+            .passthrough()
+        ),
+        nextCursor: z.string().optional(),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+
+export const schemas: any = {
+  openDropPosition_Body,
+  Problem,
+  PositionId,
+  DropPositionStatus,
+  DropPosition,
+  DropPositionListData,
+  ResponseMeta,
+  DropPositionListResponse,
+  DropPositionCreateRequest,
+  DropPositionResponse,
+  UnstakeRequest,
+  StakeEventId,
+  StakeEventType,
+  StakeEvent,
+  StakeEventListData,
+  StakeEventListResponse,
+};
+
+const endpoints = makeApi([
+  {
+    method: 'get',
+    path: '/v0/drop-positions',
+    alias: 'listDropPositions',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'cursor',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(100).optional().default(25),
+      },
+      {
+        name: 'serviceId',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            items: z.array(
+              z
+                .object({
+                  positionId: z.string().regex(/^pos_[0-9A-HJKMNP-TV-Z]{26}$/),
+                  serviceId: z.string(),
+                  curatorParticipantId: z.string(),
+                  dropsAmount: z.number().gte(0),
+                  stakedOcean: z.number().gte(0).optional(),
+                  status: z.enum(['open', 'unstaking', 'closed']),
+                  parameterVersionId: z.string(),
+                  predictedPopularity: z.number().optional(),
+                  actualProofCount: z.number().int().gte(0).optional(),
+                  createdAt: z.string().datetime({ offset: true }),
+                  updatedAt: z.string().datetime({ offset: true }),
+                })
+                .passthrough()
+            ),
+            nextCursor: z.string().optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/v0/drop-positions',
+    alias: 'openDropPosition',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        type: 'Body',
+        schema: openDropPosition_Body,
+      },
+      {
+        name: 'Idempotency-Key',
+        type: 'Header',
+        schema: z.string().min(1).max(128),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            positionId: z.string().regex(/^pos_[0-9A-HJKMNP-TV-Z]{26}$/),
+            serviceId: z.string(),
+            curatorParticipantId: z.string(),
+            dropsAmount: z.number().gte(0),
+            stakedOcean: z.number().gte(0).optional(),
+            status: z.enum(['open', 'unstaking', 'closed']),
+            parameterVersionId: z.string(),
+            predictedPopularity: z.number().optional(),
+            actualProofCount: z.number().int().gte(0).optional(),
+            createdAt: z.string().datetime({ offset: true }),
+            updatedAt: z.string().datetime({ offset: true }),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 400,
+        description: `Malformed request`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'get',
+    path: '/v0/drop-positions/:positionId',
+    alias: 'getDropPosition',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'positionId',
+        type: 'Path',
+        schema: z.string().regex(/^pos_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            positionId: z.string().regex(/^pos_[0-9A-HJKMNP-TV-Z]{26}$/),
+            serviceId: z.string(),
+            curatorParticipantId: z.string(),
+            dropsAmount: z.number().gte(0),
+            stakedOcean: z.number().gte(0).optional(),
+            status: z.enum(['open', 'unstaking', 'closed']),
+            parameterVersionId: z.string(),
+            predictedPopularity: z.number().optional(),
+            actualProofCount: z.number().int().gte(0).optional(),
+            createdAt: z.string().datetime({ offset: true }),
+            updatedAt: z.string().datetime({ offset: true }),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'get',
+    path: '/v0/drop-positions/:positionId/stake-events',
+    alias: 'listStakeEvents',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'positionId',
+        type: 'Path',
+        schema: z.string().regex(/^pos_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+      {
+        name: 'cursor',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(100).optional().default(25),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            items: z.array(
+              z
+                .object({
+                  stakeEventId: z
+                    .string()
+                    .regex(/^stk_[0-9A-HJKMNP-TV-Z]{26}$/),
+                  positionId: z.string().regex(/^pos_[0-9A-HJKMNP-TV-Z]{26}$/),
+                  serviceId: z.string(),
+                  eventType: z.enum(['open', 'unstake', 'slash']),
+                  dropsAmount: z.number(),
+                  reason: z.string().optional(),
+                  createdAt: z.string().datetime({ offset: true }),
+                })
+                .passthrough()
+            ),
+            nextCursor: z.string().optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/v0/drop-positions/:positionId/unstake',
+    alias: 'unstakeDropPosition',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        type: 'Body',
+        schema: z
+          .object({ dropsAmount: z.number().gt(0) })
+          .partial()
+          .passthrough(),
+      },
+      {
+        name: 'positionId',
+        type: 'Path',
+        schema: z.string().regex(/^pos_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+      {
+        name: 'Idempotency-Key',
+        type: 'Header',
+        schema: z.string().min(1).max(128),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            positionId: z.string().regex(/^pos_[0-9A-HJKMNP-TV-Z]{26}$/),
+            serviceId: z.string(),
+            curatorParticipantId: z.string(),
+            dropsAmount: z.number().gte(0),
+            stakedOcean: z.number().gte(0).optional(),
+            status: z.enum(['open', 'unstaking', 'closed']),
+            parameterVersionId: z.string(),
+            predictedPopularity: z.number().optional(),
+            actualProofCount: z.number().int().gte(0).optional(),
+            createdAt: z.string().datetime({ offset: true }),
+            updatedAt: z.string().datetime({ offset: true }),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+]);
+
+export const api: any = new Zodios('https://api.veridrop.local/v1', endpoints);
+
+export function createApiClient(baseUrl: string, options?: ZodiosOptions): any {
+  return new Zodios(baseUrl, endpoints, options);
+}

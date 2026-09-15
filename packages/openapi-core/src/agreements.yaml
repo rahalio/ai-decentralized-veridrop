@@ -1,0 +1,142 @@
+openapi: 3.1.0
+info:
+  title: Service Agreements API
+  version: 0.1.0
+  description: Consumer-provider service agreements and access control.
+  license: { name: Proprietary, url: https://veridrop.local/license }
+  x-domain: agr
+servers:
+  - url: https://api.veridrop.local
+security:
+  - apiKey: []
+tags:
+  - name: ServiceAgreements
+paths:
+  /v0/service-agreements:
+    get:
+      operationId: listServiceAgreements
+      tags: [ServiceAgreements]
+      summary: List service agreements
+      parameters:
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: serviceId
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: ./agreements.schemas.yaml#/components/schemas/ServiceAgreementListResponse }
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createServiceAgreement
+      tags: [ServiceAgreements]
+      summary: Create a service agreement
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: ./agreements.schemas.yaml#/components/schemas/ServiceAgreementCreateRequest }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: ./agreements.schemas.yaml#/components/schemas/ServiceAgreementResponse }
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: ServiceAgreement
+      x-dynamodb:
+        entityType: "SERVICE_AGREEMENT"
+        pkPatternTemplate: "SERVICE_AGREEMENT#${agreementId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: "entity"
+  /v0/service-agreements/{agreementId}:
+    parameters:
+      - name: agreementId
+        in: path
+        required: true
+        schema: { $ref: ./agreements.schemas.yaml#/components/schemas/AgreementId }
+    get:
+      operationId: getServiceAgreement
+      tags: [ServiceAgreements]
+      summary: Get service agreement
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: ./agreements.schemas.yaml#/components/schemas/ServiceAgreementResponse }
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v0/service-agreements/{agreementId}/revoke-access:
+    parameters:
+      - name: agreementId
+        in: path
+        required: true
+        schema: { $ref: ./agreements.schemas.yaml#/components/schemas/AgreementId }
+    post:
+      operationId: revokeAgreementAccess
+      tags: [ServiceAgreements]
+      summary: Revoke consumer access
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: ./agreements.schemas.yaml#/components/schemas/RevokeAccessRequest }
+      responses:
+        '200':
+          description: Revoked
+          content:
+            application/json:
+              schema: { $ref: ./agreements.schemas.yaml#/components/schemas/ServiceAgreementResponse }
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: none
+  /v0/service-agreements/{agreementId}/accept-delivery:
+    parameters:
+      - name: agreementId
+        in: path
+        required: true
+        schema: { $ref: ./agreements.schemas.yaml#/components/schemas/AgreementId }
+    post:
+      operationId: acceptAgreementDelivery
+      tags: [ServiceAgreements]
+      summary: Accept delivery under an agreement
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: ./agreements.schemas.yaml#/components/schemas/AcceptDeliveryRequest }
+      responses:
+        '200':
+          description: Accepted
+          content:
+            application/json:
+              schema: { $ref: ./agreements.schemas.yaml#/components/schemas/ServiceAgreementResponse }
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: none
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey

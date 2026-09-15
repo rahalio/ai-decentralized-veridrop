@@ -1,0 +1,62 @@
+openapi: 3.1.0
+info:
+  title: Agreements schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    AgreementId:
+      type: string
+      pattern: '^agr_[0-9A-HJKMNP-TV-Z]{26}$'
+    AgreementStatus:
+      type: string
+      enum: [proposed, active, fulfilled, disputed, cancelled, revoked]
+    ServiceAgreement:
+      type: object
+      required: [agreementId, serviceId, consumerParticipantId, status, createdAt, updatedAt]
+      properties:
+        agreementId: { $ref: '#/components/schemas/AgreementId' }
+        serviceId: { type: string }
+        consumerParticipantId: { type: string }
+        status: { $ref: '#/components/schemas/AgreementStatus' }
+        accessPolicyRef: { type: string }
+        deliveryAcceptedAt: { type: string, format: date-time }
+        revokedAt: { type: string, format: date-time }
+        revokeReason: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ServiceAgreementCreateRequest:
+      type: object
+      required: [serviceId, consumerParticipantId]
+      properties:
+        serviceId: { type: string }
+        consumerParticipantId: { type: string }
+        accessPolicyRef: { type: string }
+    RevokeAccessRequest:
+      type: object
+      properties:
+        reason: { type: string, maxLength: 500 }
+    AcceptDeliveryRequest:
+      type: object
+      properties:
+        note: { type: string, maxLength: 500 }
+    ServiceAgreementListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ServiceAgreement' }
+        nextCursor: { type: string }
+    ServiceAgreementResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/ServiceAgreement' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }
+    ServiceAgreementListResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/ServiceAgreementListData' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }

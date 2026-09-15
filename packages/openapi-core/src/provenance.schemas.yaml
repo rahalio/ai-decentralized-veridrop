@@ -1,0 +1,58 @@
+openapi: 3.1.0
+info:
+  title: Provenance schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    ProvenanceId:
+      type: string
+      pattern: '^prv_[0-9A-HJKMNP-TV-Z]{26}$'
+    ProvenanceStatus:
+      type: string
+      enum: [recorded, challenged, upheld, overturned]
+    ProvenanceRecord:
+      type: object
+      required: [provenanceId, serviceId, attributionDigest, status, createdAt, updatedAt]
+      properties:
+        provenanceId: { $ref: '#/components/schemas/ProvenanceId' }
+        serviceId: { type: string }
+        attributionDigest: { type: string, description: Hash of attribution graph — no raw content }
+        sourceParticipantId: { type: string }
+        status: { $ref: '#/components/schemas/ProvenanceStatus' }
+        challengeReason: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ProvenanceRecordRequest:
+      type: object
+      required: [serviceId, attributionDigest]
+      properties:
+        serviceId: { type: string }
+        attributionDigest: { type: string, minLength: 1 }
+        sourceParticipantId: { type: string }
+    EscapeChallengeRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 1, maxLength: 2000 }
+        suspectedRepublicationRef: { type: string }
+    ProvenanceListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ProvenanceRecord' }
+        nextCursor: { type: string }
+    ProvenanceResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/ProvenanceRecord' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }
+    ProvenanceListResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/ProvenanceListData' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }

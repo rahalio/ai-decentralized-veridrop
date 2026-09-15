@@ -1,0 +1,87 @@
+openapi: 3.1.0
+info:
+  title: Governance schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    ParameterVersionId:
+      type: string
+      pattern: '^prm_[0-9A-HJKMNP-TV-Z]{26}$'
+    ParameterStatus:
+      type: string
+      enum: [proposed, pendingDelay, active, superseded, cancelled]
+    ParameterKind:
+      type: string
+      enum: [bondingCurve, rewardSchedule, emissionPausePolicy]
+    ParameterVersion:
+      type: object
+      required: [parameterVersionId, kind, status, proposedAt, effectiveAfter, createdAt, updatedAt]
+      properties:
+        parameterVersionId: { $ref: '#/components/schemas/ParameterVersionId' }
+        kind: { $ref: '#/components/schemas/ParameterKind' }
+        status: { $ref: '#/components/schemas/ParameterStatus' }
+        summary: { type: string }
+        payloadDigest: { type: string, description: Hash of parameter payload }
+        proposedAt: { type: string, format: date-time }
+        effectiveAfter: { type: string, format: date-time }
+        executedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ProposeParameterRequest:
+      type: object
+      required: [kind, delayHours, payloadDigest]
+      properties:
+        kind: { $ref: '#/components/schemas/ParameterKind' }
+        summary: { type: string, maxLength: 500 }
+        delayHours: { type: integer, minimum: 1, maximum: 720 }
+        payloadDigest: { type: string, minLength: 1 }
+    EmissionPauseControlRequest:
+      type: object
+      required: [paused]
+      properties:
+        paused: { type: boolean }
+        proofTypes:
+          type: array
+          items:
+            type: string
+            enum: [availability, zkCompute, replication]
+        reason: { type: string, maxLength: 500 }
+    EmissionPauseState:
+      type: object
+      required: [paused, updatedAt]
+      properties:
+        paused: { type: boolean }
+        proofTypes:
+          type: array
+          items:
+            type: string
+            enum: [availability, zkCompute, replication]
+        reason: { type: string }
+        updatedAt: { type: string, format: date-time }
+    ParameterVersionListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ParameterVersion' }
+        nextCursor: { type: string }
+    ParameterVersionResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/ParameterVersion' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }
+    ParameterVersionListResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/ParameterVersionListData' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }
+    EmissionPauseStateResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/EmissionPauseState' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }

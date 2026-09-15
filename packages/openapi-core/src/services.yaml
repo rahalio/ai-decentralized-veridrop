@@ -1,0 +1,154 @@
+openapi: 3.1.0
+info:
+  title: Services API
+  version: 0.1.0
+  description: |
+    AI data and compute service registry. Commons vs priced; proof policy required for rewards.
+  license: { name: Proprietary, url: https://veridrop.local/license }
+  x-domain: svc
+servers:
+  - url: https://api.veridrop.local
+    description: Local API
+security:
+  - apiKey: []
+tags:
+  - name: Services
+    description: Service registry
+paths:
+  /v0/services:
+    get:
+      operationId: listServices
+      tags: [Services]
+      summary: List services
+      parameters:
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: status
+          in: query
+          schema: { $ref: ./services.schemas.yaml#/components/schemas/ServiceStatus }
+      responses:
+        '200':
+          description: Service list
+          content:
+            application/json:
+              schema: { $ref: ./services.schemas.yaml#/components/schemas/ServiceListResponse }
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: registerService
+      tags: [Services]
+      summary: Register a service
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: ./services.schemas.yaml#/components/schemas/ServiceCreateRequest }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: ./services.schemas.yaml#/components/schemas/ServiceResponse }
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: Service
+      x-dynamodb:
+        entityType: "SERVICE"
+        pkPatternTemplate: "SERVICE#${serviceId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: "entity"
+  /v0/services/{serviceId}:
+    parameters:
+      - name: serviceId
+        in: path
+        required: true
+        schema: { $ref: ./services.schemas.yaml#/components/schemas/ServiceId }
+    get:
+      operationId: getService
+      tags: [Services]
+      summary: Get service
+      responses:
+        '200':
+          description: Service
+          content:
+            application/json:
+              schema: { $ref: ./services.schemas.yaml#/components/schemas/ServiceResponse }
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v0/services/{serviceId}/proof-policy:
+    parameters:
+      - name: serviceId
+        in: path
+        required: true
+        schema: { $ref: ./services.schemas.yaml#/components/schemas/ServiceId }
+    post:
+      operationId: setServiceProofPolicy
+      tags: [Services]
+      summary: Set required proof type for rewards
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: ./services.schemas.yaml#/components/schemas/ServiceProofPolicyRequest }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: ./services.schemas.yaml#/components/schemas/ServiceResponse }
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: none
+  /v0/services/{serviceId}/suspend:
+    parameters:
+      - name: serviceId
+        in: path
+        required: true
+        schema: { $ref: ./services.schemas.yaml#/components/schemas/ServiceId }
+    post:
+      operationId: suspendService
+      tags: [Services]
+      summary: Suspend a spam or compromised service
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: ./services.schemas.yaml#/components/schemas/ServiceSuspendRequest }
+      responses:
+        '200':
+          description: Suspended
+          content:
+            application/json:
+              schema: { $ref: ./services.schemas.yaml#/components/schemas/ServiceResponse }
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: none
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey

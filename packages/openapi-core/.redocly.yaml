@@ -1,0 +1,38 @@
+apis:
+  identity:
+    root: src/identity.yaml
+  services:
+    root: src/services.yaml
+  curation:
+    root: src/curation.yaml
+  agreements:
+    root: src/agreements.yaml
+  proofs:
+    root: src/proofs.yaml
+  rewards:
+    root: src/rewards.yaml
+  arbitration:
+    root: src/arbitration.yaml
+  participants:
+    root: src/participants.yaml
+  provenance:
+    root: src/provenance.yaml
+  governance:
+    root: src/governance.yaml
+
+extends:
+  - recommended
+
+rules:
+  no-unused-components: off
+  operation-4xx-response: warn
+  info-license: off
+  info-license-url: off
+  tag-description: off
+  operation-operationId: error
+  no-invalid-media-type-examples: off
+
+theme:
+  openapi:
+    generateCodeSamples:
+      languages: []

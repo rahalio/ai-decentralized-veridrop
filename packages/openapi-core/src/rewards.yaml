@@ -1,0 +1,204 @@
+openapi: 3.1.0
+info:
+  title: Reward Epochs API
+  version: 0.1.0
+  description: Emission epochs — allocate only where stake predicted and proofs verified.
+  license: { name: Proprietary, url: https://veridrop.local/license }
+  x-domain: rwd
+servers:
+  - url: https://api.veridrop.local
+security:
+  - apiKey: []
+tags:
+  - name: RewardEpochs
+paths:
+  /v0/reward-epochs:
+    get:
+      operationId: listRewardEpochs
+      tags: [RewardEpochs]
+      summary: List reward epochs
+      parameters:
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: ./rewards.schemas.yaml#/components/schemas/RewardEpochListResponse }
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: openRewardEpoch
+      tags: [RewardEpochs]
+      summary: Open a reward epoch
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: ./rewards.schemas.yaml#/components/schemas/RewardEpochCreateRequest }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: ./rewards.schemas.yaml#/components/schemas/RewardEpochResponse }
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: RewardEpoch
+      x-dynamodb:
+        entityType: "REWARD_EPOCH"
+        pkPatternTemplate: "REWARD_EPOCH#${epochId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: "entity"
+  /v0/reward-epochs/{epochId}:
+    parameters:
+      - name: epochId
+        in: path
+        required: true
+        schema: { $ref: ./rewards.schemas.yaml#/components/schemas/EpochId }
+    get:
+      operationId: getRewardEpoch
+      tags: [RewardEpochs]
+      summary: Get reward epoch
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: ./rewards.schemas.yaml#/components/schemas/RewardEpochResponse }
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v0/reward-epochs/{epochId}/pause:
+    parameters:
+      - name: epochId
+        in: path
+        required: true
+        schema: { $ref: ./rewards.schemas.yaml#/components/schemas/EpochId }
+    post:
+      operationId: pauseRewardEpoch
+      tags: [RewardEpochs]
+      summary: Pause emission for proof class(es)
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: ./rewards.schemas.yaml#/components/schemas/PauseEmissionRequest }
+      responses:
+        '200':
+          description: Paused
+          content:
+            application/json:
+              schema: { $ref: ./rewards.schemas.yaml#/components/schemas/RewardEpochResponse }
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: none
+  /v0/reward-epochs/{epochId}/close:
+    parameters:
+      - name: epochId
+        in: path
+        required: true
+        schema: { $ref: ./rewards.schemas.yaml#/components/schemas/EpochId }
+    post:
+      operationId: closeRewardEpoch
+      tags: [RewardEpochs]
+      summary: Close / finalize an epoch
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      responses:
+        '200':
+          description: Closed
+          content:
+            application/json:
+              schema: { $ref: ./rewards.schemas.yaml#/components/schemas/RewardEpochResponse }
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: none
+  /v0/reward-epochs/{epochId}/allocate:
+    parameters:
+      - name: epochId
+        in: path
+        required: true
+        schema: { $ref: ./rewards.schemas.yaml#/components/schemas/EpochId }
+    post:
+      operationId: allocateRewardEpoch
+      tags: [RewardEpochs]
+      summary: Allocate rewards at stake×proof intersection
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: ./rewards.schemas.yaml#/components/schemas/AllocateRewardsRequest }
+      responses:
+        '200':
+          description: Allocated
+          content:
+            application/json:
+              schema: { $ref: ./rewards.schemas.yaml#/components/schemas/RewardEpochResponse }
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: none
+  /v0/reward-epochs/{epochId}/export-audit:
+    parameters:
+      - name: epochId
+        in: path
+        required: true
+        schema: { $ref: ./rewards.schemas.yaml#/components/schemas/EpochId }
+    post:
+      operationId: exportRewardEpochAudit
+      tags: [RewardEpochs]
+      summary: Export dual stake+proof audit trail
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      responses:
+        '200':
+          description: Export ready
+          content:
+            application/json:
+              schema: { $ref: ./rewards.schemas.yaml#/components/schemas/AuditExportResponse }
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: none
+  /v0/reward-epochs/{epochId}/clawback:
+    parameters:
+      - name: epochId
+        in: path
+        required: true
+        schema: { $ref: ./rewards.schemas.yaml#/components/schemas/EpochId }
+    post:
+      operationId: clawbackRewardEpoch
+      tags: [RewardEpochs]
+      summary: Clawback emitted rewards with reason
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: ./rewards.schemas.yaml#/components/schemas/ClawbackRequest }
+      responses:
+        '200':
+          description: Clawed back
+          content:
+            application/json:
+              schema: { $ref: ./rewards.schemas.yaml#/components/schemas/RewardEpochResponse }
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: none
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey

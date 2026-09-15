@@ -1,0 +1,70 @@
+openapi: 3.1.0
+info:
+  title: Proofs schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    ProofId:
+      type: string
+      pattern: '^prf_[0-9A-HJKMNP-TV-Z]{26}$'
+    ProofType:
+      type: string
+      enum: [availability, zkCompute, replication]
+    ProofVerdict:
+      type: string
+      enum: [pending, accepted, rejected, slashed]
+    DeliveryProof:
+      type: object
+      required: [proofId, serviceId, agreementId, proofType, verdict, submittedAt]
+      properties:
+        proofId: { $ref: '#/components/schemas/ProofId' }
+        serviceId: { type: string }
+        agreementId: { type: string }
+        proofType: { $ref: '#/components/schemas/ProofType' }
+        verdict: { $ref: '#/components/schemas/ProofVerdict' }
+        submittedAt: { type: string, format: date-time }
+        decidedAt: { type: string, format: date-time }
+        rejectReason: { type: string }
+        slashReason: { type: string }
+        proofDigest: { type: string, description: Opaque digest/hash only — never raw payload }
+        keeperParticipantId: { type: string }
+    DeliveryProofCreateRequest:
+      type: object
+      required: [serviceId, agreementId, proofType, proofDigest]
+      properties:
+        serviceId: { type: string }
+        agreementId: { type: string }
+        proofType: { $ref: '#/components/schemas/ProofType' }
+        proofDigest: { type: string, description: Client-side digest; server does not store payloads }
+        keeperParticipantId: { type: string }
+    ProofRejectRequest:
+      type: object
+      required: [rejectReason]
+      properties:
+        rejectReason: { type: string, minLength: 1, maxLength: 500 }
+    ProofSlashRequest:
+      type: object
+      required: [slashReason]
+      properties:
+        slashReason: { type: string, minLength: 1, maxLength: 500 }
+    DeliveryProofListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/DeliveryProof' }
+        nextCursor: { type: string }
+    DeliveryProofResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/DeliveryProof' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }
+    DeliveryProofListResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/DeliveryProofListData' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }

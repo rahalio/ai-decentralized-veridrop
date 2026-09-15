@@ -1,0 +1,73 @@
+openapi: 3.1.0
+info:
+  title: Participants schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    ParticipantId:
+      type: string
+      pattern: '^ptc_[0-9A-HJKMNP-TV-Z]{26}$'
+    ParticipantRole:
+      type: string
+      enum: [operator, keeper, provider, curator, consumer, arbitrator, auditor]
+    TcrStatus:
+      type: string
+      enum: [applied, listed, challenged, rejected]
+    Participant:
+      type: object
+      required: [participantId, displayName, roles, tcrStatus, createdAt, updatedAt]
+      properties:
+        participantId: { $ref: '#/components/schemas/ParticipantId' }
+        displayName: { type: string, maxLength: 200 }
+        roles:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/ParticipantRole' }
+        tcrStatus: { $ref: '#/components/schemas/TcrStatus' }
+        eligibilityNote: { type: string }
+        challengeReason: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ParticipantApplyRequest:
+      type: object
+      required: [displayName, roles]
+      properties:
+        displayName: { type: string, minLength: 1, maxLength: 200 }
+        roles:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/ParticipantRole' }
+    ChallengeParticipantRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 1, maxLength: 1000 }
+    ApproveRoleRequest:
+      type: object
+      required: [roles]
+      properties:
+        roles:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/ParticipantRole' }
+    ParticipantListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Participant' }
+        nextCursor: { type: string }
+    ParticipantResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/Participant' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }
+    ParticipantListResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/ParticipantListData' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }

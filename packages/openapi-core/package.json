@@ -1,0 +1,18 @@
+{
+  "name": "@veridrop/openapi-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OpenAPI contracts for Veridrop (common + domain APIs)",
+  "scripts": {
+    "lint:domains": "redocly lint",
+    "bundle:domains": "mkdir -p src/.bundled && redocly bundle identity --output src/.bundled/identity.openapi.yaml && redocly bundle identity --output src/.bundled/identity.json && redocly bundle services --output src/.bundled/services.openapi.yaml && redocly bundle services --output src/.bundled/services.json && redocly bundle curation --output src/.bundled/curation.openapi.yaml && redocly bundle curation --output src/.bundled/curation.json && redocly bundle agreements --output src/.bundled/agreements.openapi.yaml && redocly bundle agreements --output src/.bundled/agreements.json && redocly bundle proofs --output src/.bundled/proofs.openapi.yaml && redocly bundle proofs --output src/.bundled/proofs.json && redocly bundle rewards --output src/.bundled/rewards.openapi.yaml && redocly bundle rewards --output src/.bundled/rewards.json && redocly bundle arbitration --output src/.bundled/arbitration.openapi.yaml && redocly bundle arbitration --output src/.bundled/arbitration.json && redocly bundle participants --output src/.bundled/participants.openapi.yaml && redocly bundle participants --output src/.bundled/participants.json && redocly bundle provenance --output src/.bundled/provenance.openapi.yaml && redocly bundle provenance --output src/.bundled/provenance.json && redocly bundle governance --output src/.bundled/governance.openapi.yaml && redocly bundle governance --output src/.bundled/governance.json",
+    "lint": "pnpm run lint:domains",
+    "bundle": "pnpm run bundle:domains"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^1.34.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,91 @@
+openapi: 3.1.0
+info:
+  title: Curation schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    PositionId:
+      type: string
+      pattern: '^pos_[0-9A-HJKMNP-TV-Z]{26}$'
+    StakeEventId:
+      type: string
+      pattern: '^stk_[0-9A-HJKMNP-TV-Z]{26}$'
+    DropPositionStatus:
+      type: string
+      enum: [open, unstaking, closed]
+    StakeEventType:
+      type: string
+      enum: [open, unstake, slash]
+    DropPosition:
+      type: object
+      required: [positionId, serviceId, curatorParticipantId, dropsAmount, status, parameterVersionId, createdAt, updatedAt]
+      properties:
+        positionId: { $ref: '#/components/schemas/PositionId' }
+        serviceId: { type: string }
+        curatorParticipantId: { type: string }
+        dropsAmount: { type: number, minimum: 0 }
+        stakedOcean: { type: number, minimum: 0 }
+        status: { $ref: '#/components/schemas/DropPositionStatus' }
+        parameterVersionId: { type: string, description: Bonding-curve / stake param version }
+        predictedPopularity: { type: number }
+        actualProofCount: { type: integer, minimum: 0 }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    DropPositionCreateRequest:
+      type: object
+      required: [serviceId, curatorParticipantId, dropsAmount]
+      properties:
+        serviceId: { type: string }
+        curatorParticipantId: { type: string }
+        dropsAmount: { type: number, exclusiveMinimum: 0 }
+        stakedOcean: { type: number, minimum: 0 }
+    UnstakeRequest:
+      type: object
+      properties:
+        dropsAmount: { type: number, exclusiveMinimum: 0, description: Partial unstake; omit for full }
+    StakeEvent:
+      type: object
+      required: [stakeEventId, positionId, serviceId, eventType, dropsAmount, createdAt]
+      properties:
+        stakeEventId: { $ref: '#/components/schemas/StakeEventId' }
+        positionId: { $ref: '#/components/schemas/PositionId' }
+        serviceId: { type: string }
+        eventType: { $ref: '#/components/schemas/StakeEventType' }
+        dropsAmount: { type: number }
+        reason: { type: string }
+        createdAt: { type: string, format: date-time }
+    DropPositionListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/DropPosition' }
+        nextCursor: { type: string }
+    StakeEventListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/StakeEvent' }
+        nextCursor: { type: string }
+    DropPositionResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/DropPosition' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }
+    DropPositionListResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/DropPositionListData' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }
+    StakeEventListResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/StakeEventListData' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }

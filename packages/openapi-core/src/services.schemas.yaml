@@ -1,0 +1,76 @@
+openapi: 3.1.0
+info:
+  title: Services schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    ServiceId:
+      type: string
+      pattern: '^svc_[0-9A-HJKMNP-TV-Z]{26}$'
+    ServiceType:
+      type: string
+      enum: [dataAvailability, privacyCompute, persistence]
+    ProofType:
+      type: string
+      enum: [availability, zkCompute, replication]
+    ServiceStatus:
+      type: string
+      enum: [active, paused, retired]
+    PricingMode:
+      type: string
+      enum: [commons, priced]
+    Service:
+      type: object
+      required: [serviceId, providerParticipantId, serviceType, proofTypeRequired, status, pricingMode, createdAt, updatedAt]
+      properties:
+        serviceId: { $ref: '#/components/schemas/ServiceId' }
+        providerParticipantId: { type: string }
+        serviceType: { $ref: '#/components/schemas/ServiceType' }
+        proofTypeRequired: { $ref: '#/components/schemas/ProofType' }
+        status: { $ref: '#/components/schemas/ServiceStatus' }
+        pricingMode: { $ref: '#/components/schemas/PricingMode' }
+        title: { type: string, maxLength: 200 }
+        rankingScore: { type: number, description: Marketplace ranking signal (verified relevance) }
+        acceptedProofCount: { type: integer, minimum: 0 }
+        totalStakeDrops: { type: number, minimum: 0 }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ServiceCreateRequest:
+      type: object
+      required: [providerParticipantId, serviceType, proofTypeRequired, pricingMode]
+      properties:
+        providerParticipantId: { type: string }
+        serviceType: { $ref: '#/components/schemas/ServiceType' }
+        proofTypeRequired: { $ref: '#/components/schemas/ProofType' }
+        pricingMode: { $ref: '#/components/schemas/PricingMode' }
+        title: { type: string, maxLength: 200 }
+    ServiceProofPolicyRequest:
+      type: object
+      required: [proofTypeRequired]
+      properties:
+        proofTypeRequired: { $ref: '#/components/schemas/ProofType' }
+    ServiceSuspendRequest:
+      type: object
+      properties:
+        reason: { type: string, maxLength: 500 }
+    ServiceListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Service' }
+        nextCursor: { type: string }
+    ServiceResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/Service' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }
+    ServiceListResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/ServiceListData' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }

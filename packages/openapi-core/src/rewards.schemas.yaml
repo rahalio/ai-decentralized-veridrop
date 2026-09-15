@@ -1,0 +1,90 @@
+openapi: 3.1.0
+info:
+  title: Rewards schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    EpochId:
+      type: string
+      pattern: '^epc_[0-9A-HJKMNP-TV-Z]{26}$'
+    EpochStatus:
+      type: string
+      enum: [open, finalizing, paid, paused]
+    ProofType:
+      type: string
+      enum: [availability, zkCompute, replication]
+    RewardEpoch:
+      type: object
+      required: [epochId, periodStart, periodEnd, status, totalEmitted, dualLinkagePct, createdAt, updatedAt]
+      properties:
+        epochId: { $ref: '#/components/schemas/EpochId' }
+        periodStart: { type: string, format: date-time }
+        periodEnd: { type: string, format: date-time }
+        status: { $ref: '#/components/schemas/EpochStatus' }
+        totalEmitted: { type: number, minimum: 0 }
+        dualLinkagePct: { type: number, description: Percent of rewards with both stake and accepted proof }
+        pausedProofTypes:
+          type: array
+          items: { $ref: '#/components/schemas/ProofType' }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    RewardEpochCreateRequest:
+      type: object
+      required: [periodStart, periodEnd]
+      properties:
+        periodStart: { type: string, format: date-time }
+        periodEnd: { type: string, format: date-time }
+    PauseEmissionRequest:
+      type: object
+      required: [proofTypes]
+      properties:
+        proofTypes:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/ProofType' }
+        reason: { type: string, maxLength: 500 }
+    AllocateRewardsRequest:
+      type: object
+      properties:
+        dryRun: { type: boolean, default: false }
+    ClawbackRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 1, maxLength: 500 }
+        amount: { type: number, exclusiveMinimum: 0 }
+    AuditExport:
+      type: object
+      required: [epochId, exportedAt, entryCount]
+      properties:
+        epochId: { $ref: '#/components/schemas/EpochId' }
+        exportedAt: { type: string, format: date-time }
+        entryCount: { type: integer, minimum: 0 }
+        downloadUrl: { type: string, format: uri }
+    RewardEpochListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/RewardEpoch' }
+        nextCursor: { type: string }
+    RewardEpochResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/RewardEpoch' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }
+    RewardEpochListResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/RewardEpochListData' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }
+    AuditExportResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/AuditExport' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }

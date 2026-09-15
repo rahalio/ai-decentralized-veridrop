@@ -1,0 +1,640 @@
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
+
+const registerService_Body = z
+  .object({
+    providerParticipantId: z.string(),
+    serviceType: z.enum(['dataAvailability', 'privacyCompute', 'persistence']),
+    proofTypeRequired: z.enum(['availability', 'zkCompute', 'replication']),
+    pricingMode: z.enum(['commons', 'priced']),
+    title: z.string().max(200).optional(),
+  })
+  .passthrough();
+const setServiceProofPolicy_Body = z
+  .object({
+    proofTypeRequired: z.enum(['availability', 'zkCompute', 'replication']),
+  })
+  .passthrough();
+const ServiceStatus = z.enum(['active', 'paused', 'retired']);
+const Problem = z
+  .object({
+    type: z.string().url(),
+    title: z.string(),
+    status: z.number().int(),
+    detail: z.string(),
+    instance: z.string().url(),
+    code: z.string(),
+  })
+  .partial()
+  .passthrough();
+const ServiceId = z.string();
+const ServiceType = z.enum([
+  'dataAvailability',
+  'privacyCompute',
+  'persistence',
+]);
+const ProofType = z.enum(['availability', 'zkCompute', 'replication']);
+const PricingMode = z.enum(['commons', 'priced']);
+const Service = z
+  .object({
+    serviceId: z.string().regex(/^svc_[0-9A-HJKMNP-TV-Z]{26}$/),
+    providerParticipantId: z.string(),
+    serviceType: z.enum(['dataAvailability', 'privacyCompute', 'persistence']),
+    proofTypeRequired: z.enum(['availability', 'zkCompute', 'replication']),
+    status: z.enum(['active', 'paused', 'retired']),
+    pricingMode: z.enum(['commons', 'priced']),
+    title: z.string().max(200).optional(),
+    rankingScore: z.number().optional(),
+    acceptedProofCount: z.number().int().gte(0).optional(),
+    totalStakeDrops: z.number().gte(0).optional(),
+    createdAt: z.string().datetime({ offset: true }),
+    updatedAt: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+const ServiceListData = z
+  .object({
+    items: z.array(
+      z
+        .object({
+          serviceId: z.string().regex(/^svc_[0-9A-HJKMNP-TV-Z]{26}$/),
+          providerParticipantId: z.string(),
+          serviceType: z.enum([
+            'dataAvailability',
+            'privacyCompute',
+            'persistence',
+          ]),
+          proofTypeRequired: z.enum([
+            'availability',
+            'zkCompute',
+            'replication',
+          ]),
+          status: z.enum(['active', 'paused', 'retired']),
+          pricingMode: z.enum(['commons', 'priced']),
+          title: z.string().max(200).optional(),
+          rankingScore: z.number().optional(),
+          acceptedProofCount: z.number().int().gte(0).optional(),
+          totalStakeDrops: z.number().gte(0).optional(),
+          createdAt: z.string().datetime({ offset: true }),
+          updatedAt: z.string().datetime({ offset: true }),
+        })
+        .passthrough()
+    ),
+    nextCursor: z.string().optional(),
+  })
+  .passthrough();
+const ResponseMeta = z
+  .object({
+    requestId: z.string().uuid(),
+    correlationId: z.string(),
+    generatedAt: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const ServiceListResponse = z
+  .object({
+    data: z
+      .object({
+        items: z.array(
+          z
+            .object({
+              serviceId: z.string().regex(/^svc_[0-9A-HJKMNP-TV-Z]{26}$/),
+              providerParticipantId: z.string(),
+              serviceType: z.enum([
+                'dataAvailability',
+                'privacyCompute',
+                'persistence',
+              ]),
+              proofTypeRequired: z.enum([
+                'availability',
+                'zkCompute',
+                'replication',
+              ]),
+              status: z.enum(['active', 'paused', 'retired']),
+              pricingMode: z.enum(['commons', 'priced']),
+              title: z.string().max(200).optional(),
+              rankingScore: z.number().optional(),
+              acceptedProofCount: z.number().int().gte(0).optional(),
+              totalStakeDrops: z.number().gte(0).optional(),
+              createdAt: z.string().datetime({ offset: true }),
+              updatedAt: z.string().datetime({ offset: true }),
+            })
+            .passthrough()
+        ),
+        nextCursor: z.string().optional(),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const ServiceCreateRequest = z
+  .object({
+    providerParticipantId: z.string(),
+    serviceType: z.enum(['dataAvailability', 'privacyCompute', 'persistence']),
+    proofTypeRequired: z.enum(['availability', 'zkCompute', 'replication']),
+    pricingMode: z.enum(['commons', 'priced']),
+    title: z.string().max(200).optional(),
+  })
+  .passthrough();
+const ServiceResponse = z
+  .object({
+    data: z
+      .object({
+        serviceId: z.string().regex(/^svc_[0-9A-HJKMNP-TV-Z]{26}$/),
+        providerParticipantId: z.string(),
+        serviceType: z.enum([
+          'dataAvailability',
+          'privacyCompute',
+          'persistence',
+        ]),
+        proofTypeRequired: z.enum(['availability', 'zkCompute', 'replication']),
+        status: z.enum(['active', 'paused', 'retired']),
+        pricingMode: z.enum(['commons', 'priced']),
+        title: z.string().max(200).optional(),
+        rankingScore: z.number().optional(),
+        acceptedProofCount: z.number().int().gte(0).optional(),
+        totalStakeDrops: z.number().gte(0).optional(),
+        createdAt: z.string().datetime({ offset: true }),
+        updatedAt: z.string().datetime({ offset: true }),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const ServiceProofPolicyRequest = z
+  .object({
+    proofTypeRequired: z.enum(['availability', 'zkCompute', 'replication']),
+  })
+  .passthrough();
+const ServiceSuspendRequest = z
+  .object({ reason: z.string().max(500) })
+  .partial()
+  .passthrough();
+
+export const schemas: any = {
+  registerService_Body,
+  setServiceProofPolicy_Body,
+  ServiceStatus,
+  Problem,
+  ServiceId,
+  ServiceType,
+  ProofType,
+  PricingMode,
+  Service,
+  ServiceListData,
+  ResponseMeta,
+  ServiceListResponse,
+  ServiceCreateRequest,
+  ServiceResponse,
+  ServiceProofPolicyRequest,
+  ServiceSuspendRequest,
+};
+
+const endpoints = makeApi([
+  {
+    method: 'get',
+    path: '/v0/services',
+    alias: 'listServices',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'cursor',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(100).optional().default(25),
+      },
+      {
+        name: 'status',
+        type: 'Query',
+        schema: z.enum(['active', 'paused', 'retired']).optional(),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            items: z.array(
+              z
+                .object({
+                  serviceId: z.string().regex(/^svc_[0-9A-HJKMNP-TV-Z]{26}$/),
+                  providerParticipantId: z.string(),
+                  serviceType: z.enum([
+                    'dataAvailability',
+                    'privacyCompute',
+                    'persistence',
+                  ]),
+                  proofTypeRequired: z.enum([
+                    'availability',
+                    'zkCompute',
+                    'replication',
+                  ]),
+                  status: z.enum(['active', 'paused', 'retired']),
+                  pricingMode: z.enum(['commons', 'priced']),
+                  title: z.string().max(200).optional(),
+                  rankingScore: z.number().optional(),
+                  acceptedProofCount: z.number().int().gte(0).optional(),
+                  totalStakeDrops: z.number().gte(0).optional(),
+                  createdAt: z.string().datetime({ offset: true }),
+                  updatedAt: z.string().datetime({ offset: true }),
+                })
+                .passthrough()
+            ),
+            nextCursor: z.string().optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/v0/services',
+    alias: 'registerService',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        type: 'Body',
+        schema: registerService_Body,
+      },
+      {
+        name: 'Idempotency-Key',
+        type: 'Header',
+        schema: z.string().min(1).max(128),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            serviceId: z.string().regex(/^svc_[0-9A-HJKMNP-TV-Z]{26}$/),
+            providerParticipantId: z.string(),
+            serviceType: z.enum([
+              'dataAvailability',
+              'privacyCompute',
+              'persistence',
+            ]),
+            proofTypeRequired: z.enum([
+              'availability',
+              'zkCompute',
+              'replication',
+            ]),
+            status: z.enum(['active', 'paused', 'retired']),
+            pricingMode: z.enum(['commons', 'priced']),
+            title: z.string().max(200).optional(),
+            rankingScore: z.number().optional(),
+            acceptedProofCount: z.number().int().gte(0).optional(),
+            totalStakeDrops: z.number().gte(0).optional(),
+            createdAt: z.string().datetime({ offset: true }),
+            updatedAt: z.string().datetime({ offset: true }),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 400,
+        description: `Malformed request`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'get',
+    path: '/v0/services/:serviceId',
+    alias: 'getService',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'serviceId',
+        type: 'Path',
+        schema: z.string().regex(/^svc_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            serviceId: z.string().regex(/^svc_[0-9A-HJKMNP-TV-Z]{26}$/),
+            providerParticipantId: z.string(),
+            serviceType: z.enum([
+              'dataAvailability',
+              'privacyCompute',
+              'persistence',
+            ]),
+            proofTypeRequired: z.enum([
+              'availability',
+              'zkCompute',
+              'replication',
+            ]),
+            status: z.enum(['active', 'paused', 'retired']),
+            pricingMode: z.enum(['commons', 'priced']),
+            title: z.string().max(200).optional(),
+            rankingScore: z.number().optional(),
+            acceptedProofCount: z.number().int().gte(0).optional(),
+            totalStakeDrops: z.number().gte(0).optional(),
+            createdAt: z.string().datetime({ offset: true }),
+            updatedAt: z.string().datetime({ offset: true }),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/v0/services/:serviceId/proof-policy',
+    alias: 'setServiceProofPolicy',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        type: 'Body',
+        schema: setServiceProofPolicy_Body,
+      },
+      {
+        name: 'serviceId',
+        type: 'Path',
+        schema: z.string().regex(/^svc_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+      {
+        name: 'Idempotency-Key',
+        type: 'Header',
+        schema: z.string().min(1).max(128),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            serviceId: z.string().regex(/^svc_[0-9A-HJKMNP-TV-Z]{26}$/),
+            providerParticipantId: z.string(),
+            serviceType: z.enum([
+              'dataAvailability',
+              'privacyCompute',
+              'persistence',
+            ]),
+            proofTypeRequired: z.enum([
+              'availability',
+              'zkCompute',
+              'replication',
+            ]),
+            status: z.enum(['active', 'paused', 'retired']),
+            pricingMode: z.enum(['commons', 'priced']),
+            title: z.string().max(200).optional(),
+            rankingScore: z.number().optional(),
+            acceptedProofCount: z.number().int().gte(0).optional(),
+            totalStakeDrops: z.number().gte(0).optional(),
+            createdAt: z.string().datetime({ offset: true }),
+            updatedAt: z.string().datetime({ offset: true }),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 400,
+        description: `Malformed request`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/v0/services/:serviceId/suspend',
+    alias: 'suspendService',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        type: 'Body',
+        schema: z
+          .object({ reason: z.string().max(500) })
+          .partial()
+          .passthrough(),
+      },
+      {
+        name: 'serviceId',
+        type: 'Path',
+        schema: z.string().regex(/^svc_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+      {
+        name: 'Idempotency-Key',
+        type: 'Header',
+        schema: z.string().min(1).max(128),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            serviceId: z.string().regex(/^svc_[0-9A-HJKMNP-TV-Z]{26}$/),
+            providerParticipantId: z.string(),
+            serviceType: z.enum([
+              'dataAvailability',
+              'privacyCompute',
+              'persistence',
+            ]),
+            proofTypeRequired: z.enum([
+              'availability',
+              'zkCompute',
+              'replication',
+            ]),
+            status: z.enum(['active', 'paused', 'retired']),
+            pricingMode: z.enum(['commons', 'priced']),
+            title: z.string().max(200).optional(),
+            rankingScore: z.number().optional(),
+            acceptedProofCount: z.number().int().gte(0).optional(),
+            totalStakeDrops: z.number().gte(0).optional(),
+            createdAt: z.string().datetime({ offset: true }),
+            updatedAt: z.string().datetime({ offset: true }),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+]);
+
+export const api: any = new Zodios('https://api.veridrop.local/v1', endpoints);
+
+export function createApiClient(baseUrl: string, options?: ZodiosOptions): any {
+  return new Zodios(baseUrl, endpoints, options);
+}

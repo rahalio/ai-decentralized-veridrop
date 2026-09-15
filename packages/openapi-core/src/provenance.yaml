@@ -1,0 +1,114 @@
+openapi: 3.1.0
+info:
+  title: Provenance API
+  version: 0.1.0
+  description: IP provenance and data-escape challenge hooks.
+  license: { name: Proprietary, url: https://veridrop.local/license }
+  x-domain: prv
+servers:
+  - url: https://api.veridrop.local
+security:
+  - apiKey: []
+tags:
+  - name: Provenance
+paths:
+  /v0/provenance-records:
+    get:
+      operationId: listProvenanceRecords
+      tags: [Provenance]
+      summary: List provenance records
+      parameters:
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: serviceId
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: ./provenance.schemas.yaml#/components/schemas/ProvenanceListResponse }
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: recordProvenance
+      tags: [Provenance]
+      summary: Record attribution provenance
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: ./provenance.schemas.yaml#/components/schemas/ProvenanceRecordRequest }
+      responses:
+        '201':
+          description: Recorded
+          content:
+            application/json:
+              schema: { $ref: ./provenance.schemas.yaml#/components/schemas/ProvenanceResponse }
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: ProvenanceRecord
+      x-dynamodb:
+        entityType: "PROVENANCE_RECORD"
+        pkPatternTemplate: "PROVENANCE_RECORD#${provenanceId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: "entity"
+  /v0/provenance-records/{provenanceId}:
+    parameters:
+      - name: provenanceId
+        in: path
+        required: true
+        schema: { $ref: ./provenance.schemas.yaml#/components/schemas/ProvenanceId }
+    get:
+      operationId: getProvenanceRecord
+      tags: [Provenance]
+      summary: Get provenance record
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: ./provenance.schemas.yaml#/components/schemas/ProvenanceResponse }
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v0/provenance-records/{provenanceId}/challenge-escape:
+    parameters:
+      - name: provenanceId
+        in: path
+        required: true
+        schema: { $ref: ./provenance.schemas.yaml#/components/schemas/ProvenanceId }
+    post:
+      operationId: challengeDataEscape
+      tags: [Provenance]
+      summary: File a data-escape / republication challenge
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: ./provenance.schemas.yaml#/components/schemas/EscapeChallengeRequest }
+      responses:
+        '200':
+          description: Challenged
+          content:
+            application/json:
+              schema: { $ref: ./provenance.schemas.yaml#/components/schemas/ProvenanceResponse }
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: none
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey

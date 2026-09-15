@@ -1,0 +1,66 @@
+openapi: 3.1.0
+info:
+  title: Arbitration schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    CaseId:
+      type: string
+      pattern: '^case_[0-9A-HJKMNP-TV-Z]{26}$'
+    SubjectType:
+      type: string
+      enum: [service, agreement, provenance]
+    CaseStatus:
+      type: string
+      enum: [open, resolved, dismissed]
+    BindingEffect:
+      type: string
+      enum: [none, revokeEntitlement, withholdReward, restoreEntitlement]
+    ArbitrationCase:
+      type: object
+      required: [caseId, subjectType, subjectId, status, claim, createdAt, updatedAt]
+      properties:
+        caseId: { $ref: '#/components/schemas/CaseId' }
+        subjectType: { $ref: '#/components/schemas/SubjectType' }
+        subjectId: { type: string }
+        status: { $ref: '#/components/schemas/CaseStatus' }
+        claim: { type: string }
+        resolution: { type: string }
+        bindingEffect: { $ref: '#/components/schemas/BindingEffect' }
+        decidedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ArbitrationCaseCreateRequest:
+      type: object
+      required: [subjectType, subjectId, claim]
+      properties:
+        subjectType: { $ref: '#/components/schemas/SubjectType' }
+        subjectId: { type: string }
+        claim: { type: string, minLength: 1, maxLength: 4000 }
+    DecideCaseRequest:
+      type: object
+      required: [resolution, bindingEffect]
+      properties:
+        resolution: { type: string, minLength: 1, maxLength: 4000 }
+        bindingEffect: { $ref: '#/components/schemas/BindingEffect' }
+    ArbitrationCaseListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ArbitrationCase' }
+        nextCursor: { type: string }
+    ArbitrationCaseResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/ArbitrationCase' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }
+    ArbitrationCaseListResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/ArbitrationCaseListData' }
+        meta: { $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta }

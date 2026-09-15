@@ -1,0 +1,147 @@
+openapi: 3.1.0
+info:
+  title: Curation API
+  version: 0.1.0
+  description: Drop staking positions and stake event history on published bonding curves.
+  license: { name: Proprietary, url: https://veridrop.local/license }
+  x-domain: cur
+servers:
+  - url: https://api.veridrop.local
+security:
+  - apiKey: []
+tags:
+  - name: DropPositions
+    description: Curation stake positions
+  - name: StakeEvents
+    description: Stake open/unstake/slash audit trail
+paths:
+  /v0/drop-positions:
+    get:
+      operationId: listDropPositions
+      tags: [DropPositions]
+      summary: List drop positions
+      parameters:
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: serviceId
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: ./curation.schemas.yaml#/components/schemas/DropPositionListResponse }
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: openDropPosition
+      tags: [DropPositions]
+      summary: Open a staking position on a service drop
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: ./curation.schemas.yaml#/components/schemas/DropPositionCreateRequest }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: ./curation.schemas.yaml#/components/schemas/DropPositionResponse }
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: DropPosition
+      x-dynamodb:
+        entityType: "DROP_POSITION"
+        pkPatternTemplate: "DROP_POSITION#${positionId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: "entity"
+  /v0/drop-positions/{positionId}:
+    parameters:
+      - name: positionId
+        in: path
+        required: true
+        schema: { $ref: ./curation.schemas.yaml#/components/schemas/PositionId }
+    get:
+      operationId: getDropPosition
+      tags: [DropPositions]
+      summary: Get drop position
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: ./curation.schemas.yaml#/components/schemas/DropPositionResponse }
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v0/drop-positions/{positionId}/unstake:
+    parameters:
+      - name: positionId
+        in: path
+        required: true
+        schema: { $ref: ./curation.schemas.yaml#/components/schemas/PositionId }
+    post:
+      operationId: unstakeDropPosition
+      tags: [DropPositions]
+      summary: Unstake from a drop position
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: ./curation.schemas.yaml#/components/schemas/UnstakeRequest }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: ./curation.schemas.yaml#/components/schemas/DropPositionResponse }
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+      x-repository: none
+  /v0/drop-positions/{positionId}/stake-events:
+    parameters:
+      - name: positionId
+        in: path
+        required: true
+        schema: { $ref: ./curation.schemas.yaml#/components/schemas/PositionId }
+    get:
+      operationId: listStakeEvents
+      tags: [StakeEvents]
+      summary: List stake events for a position
+      parameters:
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: ./curation.schemas.yaml#/components/schemas/StakeEventListResponse }
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
